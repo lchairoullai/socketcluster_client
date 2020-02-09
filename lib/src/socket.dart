@@ -29,21 +29,19 @@ class Socket extends Emitter {
   Socket.create(this.url, {this.strategy, this.listener, this.authToken});
 
   Future<Socket> connect() async {
-    if (this._socket != null && this._socket.readyState != CLOSED) {
+    if (this._socket == null) {
       if (globalSocketPlatform is IoSocketPlatform) {
-        await this._socket.close();
+        this._socket = await globalSocketPlatform.webSocket(url);
       } else {
-        await this._socket.close();
+        this._socket = globalSocketPlatform.webSocket(url);
       }
     }
 
     if (globalSocketPlatform is IoSocketPlatform) {
-      this._socket = await globalSocketPlatform.webSocket(url);
       this._socket.listen(handleMessage).onDone(onSocketDone);
       onSocketOpened();
       return this;
     } else {
-      this._socket = globalSocketPlatform.webSocket(url);
       this._socket
         ..onOpen.listen(onSocketOpened)
         ..onClose.listen(onSocketDone)
