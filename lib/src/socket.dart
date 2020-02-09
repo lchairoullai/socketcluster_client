@@ -30,6 +30,7 @@ class Socket extends Emitter {
 
   Future<Socket> connect() async {
     if (this._socket != null && this.state != CLOSED) {
+      print(this.state);
       return this;
     }
 
