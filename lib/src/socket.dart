@@ -41,7 +41,7 @@ class Socket extends Emitter {
       this._socket = await globalSocketPlatform.webSocket(url);
       this._socket.listen(handleMessage).onDone(onSocketDone);
       onSocketOpened();
-      return this._socket;
+      return this;
     } else {
       this._socket = globalSocketPlatform.webSocket(url);
       this._socket
@@ -49,7 +49,7 @@ class Socket extends Emitter {
         ..onClose.listen(onSocketDone)
         ..onMessage.listen(handleMessage);
       await whenTrue(this._socket._socket.onOpen);
-      return this._socket;
+      return this;
     }
   }
 
