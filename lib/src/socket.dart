@@ -26,38 +26,30 @@ class Socket extends Emitter {
   static const int CLOSING = 2;
   static const int CLOSED = 3;
 
-  Socket._internal(this._socket,
-      {this.authToken, this.strategy, this.listener}) {
-    this._socket = _socket;
+  Socket.create(this.url, {this.strategy, this.listener, this.authToken});
+
+  Future<Socket> connect() async {
+    if (this._socket != null && this._socket.readyState != CLOSED) {
+      if (globalSocketPlatform is IoSocketPlatform) {
+        await this._socket.close();
+      } else {
+        await this._socket.close();
+      }
+    }
+
     if (globalSocketPlatform is IoSocketPlatform) {
-      _socket.listen(handleMessage).onDone(onSocketDone);
+      this._socket = await globalSocketPlatform.webSocket(url);
+      this._socket.listen(handleMessage).onDone(onSocketDone);
       onSocketOpened();
+      return this._socket;
     } else {
-      _socket
+      this._socket = globalSocketPlatform.webSocket(url);
+      this._socket
         ..onOpen.listen(onSocketOpened)
         ..onClose.listen(onSocketDone)
         ..onMessage.listen(handleMessage);
-    }
-  }
-
-  static Future<Socket> connect(String url,
-      {String authToken,
-      ReconnectStrategy strategy,
-      BasicListener listener}) async {
-    if (globalSocketPlatform is IoSocketPlatform) {
-      var socket = await globalSocketPlatform.webSocket(url);
-      return new Socket._internal(
-        socket,
-        authToken: authToken,
-        strategy: strategy,
-        listener: listener,
-      );
-    } else {
-      var _htmlsocket = globalSocketPlatform.webSocket(url);
-      var _socket = new Socket._internal(_htmlsocket,
-          authToken: authToken, strategy: strategy, listener: listener);
-      await whenTrue(_socket._socket.onOpen);
-      return _socket;
+      await whenTrue(this._socket._socket.onOpen);
+      return this._socket;
     }
   }
 

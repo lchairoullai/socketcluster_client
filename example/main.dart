@@ -35,9 +35,10 @@ class MyListener extends BasicListener {
 }
 
 main() async {
-  var socket = await Socket.connect('ws://localhost:8000/socketcluster/',
+  Socket socket = new Socket.create('ws://localhost:8000/socketcluster/',
       listener: new MyListener());
-  socket.on('rand', (name, data, ack) {
+  var socketC = await socket.connect();
+  socketC.on('rand', (name, data, ack) {
     print('got message $data from event $name');
     ack(name, 'No error', 'Hi there buddy');
   });
