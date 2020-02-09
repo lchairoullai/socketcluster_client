@@ -18,8 +18,8 @@ class Socket extends Emitter {
   String authToken;
   final List<Channel> channels = new List();
   final Map<int, List<dynamic>> _acks = new Map();
-
-  int get state => _socket.readyState ?? CLOSED;
+  int _state;
+  int get state => _state;
 
   static const int CONNECTING = 0;
   static const int OPEN = 1;
@@ -34,11 +34,13 @@ class Socket extends Emitter {
     }
 
     if (globalSocketPlatform is IoSocketPlatform) {
+      this._state = CONNECTING;
       this._socket = await globalSocketPlatform.webSocket(url);
       this._socket.listen(handleMessage).onDone(onSocketDone);
       onSocketOpened();
       return this;
     } else {
+      this._state = CONNECTING;
       this._socket = globalSocketPlatform.webSocket(url);
       this._socket
         ..onOpen.listen(onSocketOpened)
@@ -79,6 +81,7 @@ class Socket extends Emitter {
   }
 
   void onSocketOpened([event]) {
+    this._state = OPEN;
     _counter = 0;
     strategy?.attmptsMade = 0;
     var authObject = {
@@ -97,8 +100,8 @@ class Socket extends Emitter {
   }
 
   void onSocketDone([event]) {
+    this._state = CLOSED;
     if (listener != null) {
-      this._socket.close();
       listener.onDisconnected(this);
     }
   }
